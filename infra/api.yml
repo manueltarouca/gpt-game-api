@@ -1,0 +1,418 @@
+openapi: 3.0.1
+info:
+  title: WorldGuide GPT Game API
+  version: 1.0.0
+  description: API for a serverless exploration game powered by AWS Lambda and API Gateway.
+security:
+  - apiKey: []
+paths:
+  /characters:
+    post:
+      summary: Create a new character
+      operationId: createCharacter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewCharacter'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '201':
+          description: Character created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+  /characters/{characterId}:
+    get:
+      summary: Get character information
+      operationId: getCharacter
+      parameters:
+        - $ref: '#/components/parameters/characterId'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Character data retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Character'
+  /explore/move:
+    post:
+      summary: Move to a new or existing location
+      operationId: moveToLocation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveRequest'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Moved to new location successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Location'
+  /explore/state:
+    get:
+      summary: Get the current state of the player's location
+      operationId: getLocationState
+      parameters:
+        - in: query
+          name: characterId
+          required: true
+          schema:
+            type: string
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Location state retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LocationState'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /environment/interact:
+    post:
+      summary: Interact with an object in the environment
+      operationId: interactWithObject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InteractRequest'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Interaction result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InteractResponse'
+  /social/message:
+    post:
+      summary: Send a message to another player
+      operationId: sendMessage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageRequest'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Message sent successfully
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /social/messages:
+    get:
+      summary: Get messages for the current player
+      operationId: getMessages
+      parameters:
+        - in: query
+          name: characterId
+          required: true
+          schema:
+            type: string
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message
+  /narrative/contribute:
+    post:
+      summary: Contribute to the world narrative
+      operationId: contributeNarrative
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NarrativeContribution'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Contribution accepted
+  /profile/journal:
+    post:
+      summary: Add an entry to personal journal
+      operationId: addJournalEntry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JournalEntry'
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: Journal entry added
+  /world/locations:
+    get:
+      summary: Get a list of all locations
+      operationId: getAllLocations
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: A list of locations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Location'
+  /world/narratives:
+    get:
+      summary: Get all narrative contributions
+      operationId: getAllNarratives
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: A list of narratives
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/NarrativeContribution'
+  /world/state:
+    get:
+      summary: Get a summary of the current world state
+      operationId: getWorldState
+      x-amazon-apigateway-integration:
+        uri: arn:aws:apigateway:${region}:lambda:path/2015-03-31/functions/${lambda_arn}/invocations
+        passthroughBehavior: when_no_match
+        httpMethod: POST
+        type: aws_proxy
+      responses:
+        '200':
+          description: World state summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorldState'
+components:
+  securitySchemes:
+    apiKey:
+      type: apiKey
+      name: x-api-key
+      in: header
+  parameters:
+    characterId:
+      name: characterId
+      in: path
+      required: true
+      schema:
+        type: string
+  schemas:
+    NewCharacter:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+        bio:
+          type: string
+    Character:
+      allOf:
+        - $ref: '#/components/schemas/NewCharacter'
+        - type: object
+          properties:
+            characterId:
+              type: string
+            locationId:
+              type: string
+    MoveRequest:
+      type: object
+      required:
+        - characterId
+        - locationName
+        - description
+      properties:
+        characterId:
+          type: string
+        locationName:
+          type: string
+        description:
+          type: string
+    Location:
+      type: object
+      properties:
+        locationId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+    LocationState:
+      type: object
+      properties:
+        characters:
+          type: array
+          items:
+            $ref: '#/components/schemas/Character'
+        objects:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorldObject'
+    InteractRequest:
+      type: object
+      required:
+        - characterId
+        - objectName
+        - action
+        - objectDescription
+      properties:
+        characterId:
+          type: string
+        objectName:
+          type: string
+        action:
+          type: string
+        objectDescription:
+          type: string
+    InteractResponse:
+      type: array
+      items:
+        type: object
+        properties:
+          $ref: '#/components/schemas/WorldObject'
+    MessageRequest:
+      type: object
+      required:
+        - characterId
+        - senderName
+        - recipientName
+        - message
+      properties:
+        characterId:
+          type: string
+        senderName:
+          type: string
+        recipientName:
+          type: string
+        message:
+          type: string
+    Message:
+      type: object
+      properties:
+        senderName:
+          type: string
+        recipientName:
+          type: string
+        message:
+          type: string
+    NarrativeContribution:
+      type: object
+      required:
+        - characterId
+        - content
+      properties:
+        characterId:
+          type: string
+        content:
+          type: string
+    JournalEntry:
+      type: object
+      required:
+        - characterId
+        - entry
+      properties:
+        characterId:
+          type: string
+        entry:
+          type: string
+    WorldObject:
+      type: object
+      properties:
+        objectId:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        locationId:
+          type: string
+        state:
+          type: string
+        actionLog:
+          type: array
+          items:
+            type: string
+    WorldState:
+      type: object
+      properties:
+        totalPlayers:
+          type: integer
+        totalLocations:
+          type: integer
+        totalObjects:
+          type: integer
+        recentNarratives:
+          type: array
+          items:
+            $ref: '#/components/schemas/NarrativeContribution'
